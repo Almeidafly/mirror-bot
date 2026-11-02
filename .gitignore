@@ -1,0 +1,7 @@
+state.json
+driver.log
+functions.json
+cost_state.json
+*.optimized.json
+__pycache__/
+.env
