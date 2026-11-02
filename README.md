@@ -27,3 +27,44 @@ To use exactly the code of one layer, check out its tag: `git checkout v0.2.0` (
 | v0.2.0 | layer-2-hidden-grid-goal | `hidden_grid` | Hidden 3x3 world (cells 0..2). `forward` stops there silently, and only the local log records `[local: blocked]`. The goal is to visit all 9 cells, and `goal reached` is logged once. No size, edge, or boundary word ever reaches Grok (tested) |
 | v0.3.0 | layer-3-token-budget | `token_budget` | Reads `usage` from every Grok response and logs `cmd=tokens prompt= completion= total= running_total=`. Totals are kept in `state.tokens`. Every approve result shows `tokens <this item>/<total>`, and so does the goal line. Uses a compact prompt and compact JSON state (`{"p":[x,y],"h":..,"v":[..]}`), and sets `max_tokens` (`MIRROR_MAX_TOKENS`, default 1024). Grok is told that few tokens and reusable functions are part of the goal. `look` is human-only: `python3 mirror.py look` runs locally with no API call, and Grok proposing `look` is refused |
 | v0.4.0 | layer-4-stuck-fix | `stuck_fix` | If a command changed neither position nor heading, the next state Grok sees carries `note: last move had no effect: <cmd>`, and proposing that same command again is refused until something changes. This fixes the live-run loop where Grok repeated `finish_grid` from a corner |
+| v0.5.0 | layer-5-api-cost | `api_cost` | Cost optimizer for an API call you own, given as a JSON request file: `cost.py propose` measures the original with a real call, Grok proposes a cheaper equivalent (smaller prompt, cheaper model, lower `max_tokens`, cache-friendly order), and the candidate is measured with a real call. It is validated (allowed keys only, models from `/v1/models`, messages shape, same output shape). Nothing is saved until `cost.py approve`, which writes `<file>.optimized.json` and never modifies the original. First target is Mirror Bot's own call (`cost.py export-mirror`) |
+
+`main` = every layer (v0.5.0).
+
+## Layer 5: API cost
+    python3 cost.py export-mirror mirror_request.json     # Mirror Bot's own propose request
+    MIRROR_LAYERS=functions,hidden_grid python3 cost.py export-mirror verbose.json   # same request without layer 3
+    python3 cost.py propose mirror_request.json           # 3 real calls: before, optimizer, after
+    python3 cost.py approve    # writes mirror_request.optimized.json
+    python3 cost.py deny       # discard
+    # use an approved request for Mirror Bot by setting MIRROR_MODEL / MIRROR_MAX_TOKENS to the values it chose
+Settings: `MIRROR_COST_MODELS` (a comma list that overrides the live model list), `MIRROR_COST` (the pending-state file, `cost_state.json`).
+
+## Safety
+- Grok output is only data. There is no exec or eval. Functions can only call primitives, and they cannot call each other.
+- Every action goes through `approve`. Refused output is never repaired or retried.
+- `XAI_API_KEY` is read from the environment only. Runtime files are git-ignored.
+
+## Hooks (for writing a layer)
+A layer is a module in `layers/` and is listed in `bot.ALL_LAYERS`. It can define any of these optional hooks:
+- `fresh(s)`
+- `view(v, s)`
+- `sys(s, compact)`
+- `goal(g, s, compact)`
+- `body(b)`
+- `usage(s, u, tag)`
+- `compact()`
+- `inside(x, y)`
+- `parse_name(c)`
+- `define(s, name)`
+- `approve_define(s, d)`
+- `run(s, d)`
+- `check(s, d)`
+- `after_run(s, d, before)`
+- `result(r, s, d)`
+- `after_approve(s)`
+- `goal_extra(s)`
+- `cli()`
+
+## Tests
+`python3 -m unittest discover -s tests -v` runs offline and makes no network calls. Each layer has its own `tests/test_<layer>.py`. Each test file pins `MIRROR_LAYERS`, so it also covers that layer being on, off, and on alone.
