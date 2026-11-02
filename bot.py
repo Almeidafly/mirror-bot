@@ -138,7 +138,7 @@ def cmd_approve(s):
     s["pending"] = None
     if "define" in d: r = first("approve_define", s, d) or "refused: functions layer disabled"
     else:
-        before = (s["x"], s["y"], len(s["visited"]))
+        before = (s["x"], s["y"], s["heading"])
         if d["cmd"] in PRIMS: r = run_prim(s, d)
         else: r = first("run", s, d) or f"refused: {d['cmd']} not available"
         hook("after_run", s, d, before)
