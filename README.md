@@ -23,3 +23,4 @@ To use exactly the code of one layer, check out its tag: `git checkout v0.2.0` (
 | Tag | Branch | Flag name | Adds |
 |---|---|---|---|
 | v0.0.0 | layer-0-core | (always on) | Grok-only driver, propose/approve/deny gate, strict allowlist (`forward` n 1-3, `left`, `right`, `stop`), refusals, `driver.log`, unbounded world |
+| v0.1.0 | layer-1-functions | `functions` | Unknown command name → a second Grok call defines it from primitives (strictly validated: name regex, 1-8 steps, repeat 1-5, no other keys, no code). It becomes a pending new function and is saved to `functions.json` only on `approve` |
