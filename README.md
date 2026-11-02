@@ -24,3 +24,4 @@ To use exactly the code of one layer, check out its tag: `git checkout v0.2.0` (
 |---|---|---|---|
 | v0.0.0 | layer-0-core | (always on) | Grok-only driver, propose/approve/deny gate, strict allowlist (`forward` n 1-3, `left`, `right`, `stop`), refusals, `driver.log`, unbounded world |
 | v0.1.0 | layer-1-functions | `functions` | Unknown command name → a second Grok call defines it from primitives (strictly validated: name regex, 1-8 steps, repeat 1-5, no other keys, no code). It becomes a pending new function and is saved to `functions.json` only on `approve` |
+| v0.2.0 | layer-2-hidden-grid-goal | `hidden_grid` | Hidden 3x3 world (cells 0..2). `forward` stops there silently, and only the local log records `[local: blocked]`. The goal is to visit all 9 cells, and `goal reached` is logged once. No size, edge, or boundary word ever reaches Grok (tested) |
