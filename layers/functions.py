@@ -15,7 +15,9 @@ def sys(s, compact):
     if compact: return 'Or {"cmd":"<fn>"}. Fns: ' + bot.cj({k: v["description"] for k, v in f.items()}) + ". Unknown snake_case name = new fn you will define. Reusable multi-step fns save calls."
     return ('Registered functions (call as {"cmd":"<name>"}): ' + json.dumps(f) + ". If a useful multi-step command is missing, "
             'you may propose a NEW name as {"cmd":"<snake_case_name>"}; you will then be asked to define it from primitives, and a human approves it.')
+RESERVED = {"look"}  # human-only CLI name (token_budget layer)
 def parse_name(c):
+    if c in RESERVED and "token_budget" in bot.active(): return None
     if c in load_funcs(): return {"cmd": c}, None
     if not NAME_RE.match(c): return None, "invalid function name"
     return {"new": c}, None
